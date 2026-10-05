@@ -80,4 +80,5 @@ Still on, because none of it is code quality:
 - Load-bearing info on a GitHub issue goes in the body (`gh issue edit`), never in comments. Fold corrections and dependency notes into the body.
 - Keep `README.md` current in the same PR when a change is reader-facing. Not for internal refactors or test tweaks.
 - List options with letters, not numbers.
+- Ask me at most 2 questions at a time.
 - Confirm risky actions (force-push, history rewrite, deleting an unmerged or shared branch, data loss) before executing.
