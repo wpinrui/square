@@ -14,6 +14,6 @@ Double-click `square.pyw` (or run `python square.pyw`).
 
 - **Unlocked** (white border): drag the middle to move, drag an edge or corner to resize.
 - **Double-click** the square to lock it in place. Double-click again to unlock.
-- **Tray icon** (by the clock): Show/Hide, Quit. Double-clicking the tray icon toggles Show/Hide.
+- **Tray icon** (by the clock): Show/Hide, Reset (100 by 100 square in the middle of the screen, unlocked), Quit. Double-clicking the tray icon toggles Show/Hide.
 
 Position, size and lock state are remembered between runs.
