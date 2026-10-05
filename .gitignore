@@ -1,0 +1,20 @@
+# Logs
+*.log
+
+# Environment / local
+.env
+.env.local
+*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Claude personal (non-shared) settings
+.claude/settings.local.json
+
+# Scratch work (never committed)
+temp/
+
+# Conversation incidents, reviewed in a retro and then deleted
+.incidents/
