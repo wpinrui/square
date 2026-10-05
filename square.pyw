@@ -50,6 +50,7 @@ class Square:
         self.events = queue.Queue()
         self.icon = pystray.Icon("square", self.tray_image(), "Square", pystray.Menu(
             pystray.MenuItem("Show/Hide", lambda icon, item: self.events.put("toggle"), default=True),
+            pystray.MenuItem("Reset", lambda icon, item: self.events.put("reset")),
             pystray.MenuItem("Quit", lambda icon, item: self.events.put("quit")),
         ))
         self.icon.run_detached()
@@ -148,6 +149,17 @@ class Square:
                     self.root.deiconify()
                     self.root.attributes("-topmost", True)
                 self.visible = not self.visible
+            elif event == "reset":
+                sw, sh = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+                self.root.geometry(f"100x100+{(sw - 100) // 2}+{(sh - 100) // 2}")
+                self.locked = False
+                if not self.visible:
+                    self.root.deiconify()
+                    self.visible = True
+                self.root.attributes("-topmost", True)
+                self.root.update_idletasks()
+                self.draw_border()
+                self.save()
             elif event == "quit":
                 self.save()
                 self.icon.stop()
