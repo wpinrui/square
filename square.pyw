@@ -2,7 +2,9 @@ import ctypes
 import json
 import os
 import queue
+import sys
 import tkinter as tk
+import winreg
 
 import pystray
 from PIL import Image, ImageDraw
@@ -11,6 +13,8 @@ GREY = "#808080"
 EDGE = 8
 MIN_SIZE = 30
 CONFIG = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "square", "config.json")
+
+RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 
 CURSORS = {
     "l": "size_we", "r": "size_we", "t": "size_ns", "b": "size_ns",
@@ -37,8 +41,12 @@ class Square:
         x, y = cfg.get("x", (sw - w) // 2), cfg.get("y", (sh - h) // 2)
         self.root.geometry(f"{w}x{h}+{x}+{y}")
         self.locked = cfg.get("locked", False)
-        self.visible = True
+        self.visible = "--hidden" not in sys.argv
+        if not self.visible:
+            self.root.withdraw()
         self.drag = None
+        self.startup = cfg.get("startup", True)
+        self.apply_startup()
 
         self.canvas.bind("<Motion>", self.on_motion)
         self.canvas.bind("<ButtonPress-1>", self.on_press)
@@ -51,6 +59,8 @@ class Square:
         self.icon = pystray.Icon("square", self.tray_image(), "Square", pystray.Menu(
             pystray.MenuItem("Show/Hide", lambda icon, item: self.events.put("toggle"), default=True),
             pystray.MenuItem("Reset", lambda icon, item: self.events.put("reset")),
+            pystray.MenuItem("Launch on startup", lambda icon, item: self.events.put("startup"),
+                             checked=lambda item: self.startup),
             pystray.MenuItem("Quit", lambda icon, item: self.events.put("quit")),
         ))
         self.icon.run_detached()
@@ -69,8 +79,21 @@ class Square:
             json.dump({
                 "x": self.root.winfo_x(), "y": self.root.winfo_y(),
                 "w": self.root.winfo_width(), "h": self.root.winfo_height(),
-                "locked": self.locked,
+                "locked": self.locked, "startup": self.startup,
             }, f)
+
+    def apply_startup(self):
+        # Only the installed exe registers itself, so running from source never autostarts.
+        if not getattr(sys, "frozen", False):
+            return
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as key:
+            if self.startup:
+                winreg.SetValueEx(key, "square", 0, winreg.REG_SZ, f'"{sys.executable}" --hidden')
+            else:
+                try:
+                    winreg.DeleteValue(key, "square")
+                except FileNotFoundError:
+                    pass
 
     def tray_image(self):
         img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
@@ -159,6 +182,11 @@ class Square:
                 self.root.attributes("-topmost", True)
                 self.root.update_idletasks()
                 self.draw_border()
+                self.save()
+            elif event == "startup":
+                self.startup = not self.startup
+                self.apply_startup()
+                self.icon.update_menu()
                 self.save()
             elif event == "quit":
                 self.save()
